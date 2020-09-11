@@ -1,0 +1,10 @@
+question: |
+  Hello, what is your name?
+  
+fields:
+  - Name: name
+  
+---
+mandatory: true
+question: |
+  Hello ${ name }, have a nice day.
