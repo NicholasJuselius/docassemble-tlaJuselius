@@ -1,0 +1,35 @@
+mandatory: true
+question: |
+  What is your name?
+
+fields:
+  - Name: user_name
+
+---
+
+mandatory: true
+question: |
+  What is your quest?
+
+fields:
+ - Quest: quest
+
+--- 
+
+mandatory: true
+question: |
+  What is your favorite colour?
+  
+fields:
+ - Favorite Colour: colour
+
+---
+
+mandatory: true
+question: |
+
+  Thank you, ${user_name}!  
+  
+  
+  You may pass. 
+
