@@ -1,10 +1,94 @@
+objects: 
+  - user: Individual
+  - cohabs: DAList.using(object_type=Individual)
+ 
+---
+
+mandatory: true
+code: |
+  set_info(user = user)
+  
+ 
+---
+
+
+Question: |
+  Do you live with anyone?
+yesno: cohabs.there_are_any
+
+---
 question: |
-  Hello, what is your name?
+  Do you live with anyone else?
+yesno: cohabs.there_is_another
+
+---
+
+Generic Object: Individual
+Question: |
+  % if x==user:
+  What is your name?
+  % else:
+  What is their name?
+  % endif
   
 fields:
-  - Name: name
+  - First Name: x.name.first
+  - Last Name: x.name.last
   
 ---
+
+question: Have you seen the following movies?
+fields:
+  - Monty Python and the Holy Grail: user.has_seen_holygrail
+    datatype: yesnowide
+  - Monty Python's Life of Brian: user.has_seen_LOB
+    datatype: yesnowide
+
+---
+
+question: |
+  What is your favorite colour?
+
+field: user.fav_colour
+choices:
+  - Red
+  - Blue
+  - Yellow
+  
+---
+question: |
+  Please sign
+  
+signature: user.signature
+  
+---
+
 mandatory: true
 question: |
-  Hello ${ name }, have a nice day.
+  Thank you, ${ user.name.first }.  
+  
+  [NEWPAR]
+  You have told me that you live with 
+  % if cohabs.there_are_any:
+  ${ cohabs }.  
+  % else:
+  no one.  
+  %endif  
+  
+  [NEWPAR]
+  Your favorite colour is ${ user.fav_colour}, and you
+  % if user.has_seen_holygrail and not user.has_seen_LOB:
+  should watch Monty Python's Life of Brian!  
+  % elif user.has_seen_LOB and not user.has_seen_holygrail:
+  should watch Monty Python and the Holy Grail!  
+  % elif user.has_seen_LOB and user.has_seen_holygrail:
+  have seen enough Monty Python.  
+  % else:
+  should watch more Monty Python!  
+  % endif  
+  
+  [NEWPAR]
+  Your signature is ${ user.signature }
+  
+  [NEWPAR]
+  Thank you for your responses, have a nice day!
