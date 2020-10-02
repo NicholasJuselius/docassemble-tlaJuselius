@@ -30,65 +30,60 @@ Question: |
   % else:
   What is their name?
   % endif
-  
+
+# using the logic above because at this time, if I use some of the built in pronoun # functionality, will return e.g. "the first cohabs name" not "their name".
+
 fields:
   - First Name: x.name.first
   - Last Name: x.name.last
+
+---
+question: |
+  Do you qualify for Legal Aid?
+  
+yesno: can_help
   
 ---
-
-question: Have you seen the following movies?
+# This presumes, of course, that the user has a pending court date. Will probably modify the time to be a MC between 9:30 and 2 or whatever.
+question: |
+  When is your next court date?
+  
 fields:
-  - Monty Python and the Holy Grail: user.has_seen_holygrail
-    datatype: yesnowide
-  - Monty Python's Life of Brian: user.has_seen_LOB
-    datatype: yesnowide
+  - Date: courtDate
+    datatype: date
+  - Time: courtTime
+    datatype: time
+    
 
 ---
-
-question: |
-  What is your favorite colour?
-
-field: user.fav_colour
-choices:
-  - Red
-  - Blue
-  - Yellow
+# I included one of the if statements twice only because I thought it was funny. 
+mandatory: True
+question: Your document is ready.
+attachments:
+  - name: Document
+    filename: document
+    content: |
+      Thank you for your time, ${user.name.first}. We have determined your eligibility for Legal Aid for your ${ format_date(courtDate, format= 'MMMM dd') } court date. 
+      
+      You have told us that you currently live
+      % if not cohabs:
+      alone, 
+      % else:
+      with ${ cohabs },
+      % endif
+      and that you
+      % if can_help:
+      qualify for Legal Aid.
+      % else: 
+      do not qualify for Legal Aid.
+      % endif
+      
+      Based on your responses, our complicated algorithm has determined
+      % if can_help:
+      that you qualify for Legal Aid at this time.
+      % else:
+      ,unfortunately, that you do not qualify for Legal Aid at this time. 
+      % endif
+      
+      Please be advised that, notwithstanding this communication, you are still required to attend court on ${ format_date(courtDate, format= 'EEEE, MMMM, dd, yyyy') } at ${ format_time(courtTime, format= 'hh:mm a') }.
   
----
-question: |
-  Please sign
-  
-signature: user.signature
-  
----
-
-mandatory: true
-question: |
-  Thank you, ${ user.name.first }.  
-  
-  [NEWPAR]
-  You have told me that you live with 
-  % if cohabs.there_are_any:
-  ${ cohabs }.  
-  % else:
-  no one.  
-  %endif  
-  
-  [NEWPAR]
-  Your favorite colour is ${ user.fav_colour}, and you
-  % if user.has_seen_holygrail and not user.has_seen_LOB:
-  should watch Monty Python's Life of Brian!  
-  % elif user.has_seen_LOB and not user.has_seen_holygrail:
-  should watch Monty Python and the Holy Grail!  
-  % elif user.has_seen_LOB and user.has_seen_holygrail:
-  have seen enough Monty Python.  
-  % else:
-  should watch more Monty Python!  
-  % endif  
-  
-  [NEWPAR]
-  Your signature is ${ user.signature }
-  
-  [NEWPAR]
-  Thank you for your responses, have a nice day!
