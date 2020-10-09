@@ -16,28 +16,24 @@ code: |
 ---
 # We want to know if the user has a lawyer, and if so whether they are acting on the matter. 
 code: |
-  
-  has_lawyer_count += 1
-  if user.has_lawyer:
-    lawyer_doingstuff_count += 1
-    if user.lawyer_doingstuff:
-      user.represented = True
-    else:
-      user.represented = False
-      can_afford_lawyer_count += 1
-      # if you have a lawyer and they aren't acting for you, we ask if you can afford one because I suppose there exists a situation where you have a lawyer, and they aren't acting for you because you cannot afford to replenish your retainer or something. 
-      if user.can_afford_lawyer:
+
+  can_afford_lawyer_count += 1
+  if user.can_afford_lawyer:
+    user.represented = True
+  else: 
+    has_lawyer_count += 1
+    # I don't really like this line of questioning because we're asking "can you pay for a lawyer?" "No? Did you pay for one anyways?" 
+    # This will make more sense when can_afford_lawyer is a function and not a question. 
+    if user.has_lawyer:
+      lawyer_doingstuff_count += 1
+      if user.lawyer_doingstuff:
         user.represented = True
       else:
+        # I don't understand how law works and whether or not you count as represented if you have a lawyer who isn't acting for you. This is like the case where your retainer has run out and you cannot replenish it?
         user.represented = False
-  else:
-    can_afford_lawyer_count += 1
-    if user.can_afford_lawyer:
-      user.represented = True
     else:
       user.represented = False
-    
-
+  
 ---
 #if its an appeal, resident issues are irrelevant. Else, need AB to be location of matter and user. AB_matter and AB_resident are equally important, but we ask for matter first for clarity of code. If you and your matter are both in AB, you may be disqualified if not crim or civ, so those are asked last and bunched together for simplicity. The code will later output "your _____ matter"
 code: |
