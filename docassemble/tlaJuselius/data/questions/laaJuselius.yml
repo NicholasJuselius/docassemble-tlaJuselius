@@ -7,10 +7,71 @@ objects:
 mandatory: true
 code: |
   set_info(user = user)
-  
- 
----
+  user.name.first
+  if user.resident and not user.represented:
+    user.eligible = True
+  else:
+    user.eligible = False
 
+---
+# We want to know if the user has a lawyer, and if so whether they are acting on the matter. 
+code: |
+  
+  has_lawyer_count += 1
+  if user.has_lawyer:
+    lawyer_doingstuff_count += 1
+    if user.lawyer_doingstuff:
+      user.represented = True
+    else:
+      user.represented = False
+      can_afford_lawyer_count += 1
+      # if you have a lawyer and they aren't acting for you, we ask if you can afford one because I suppose there exists a situation where you have a lawyer, and they aren't acting for you because you cannot afford to replenish your retainer or something. 
+      if user.can_afford_lawyer:
+        user.represented = True
+      else:
+        user.represented = False
+  else:
+    can_afford_lawyer_count += 1
+    if user.can_afford_lawyer:
+      user.represented = True
+    else:
+      user.represented = False
+    
+
+---
+#if its an appeal, resident issues are irrelevant. Else, need AB to be location of matter and user. AB_matter and AB_resident are equally important, but we ask for matter first for clarity of code. If you and your matter are both in AB, you may be disqualified if not crim or civ, so those are asked last and bunched together for simplicity. The code will later output "your _____ matter"
+code: |
+  
+  appeal_count += 1
+  if user.appeal:
+    user.resident = True
+  else:
+    AB_matter_count += 1
+    if user.AB_matter:
+      AB_resident_count += 1
+      if user.AB_resident:
+        crimfam_count =+ 1
+        if (user.criminal_matter or user.family_matter):
+          user.resident = True
+        else:
+          user.resident = False
+      else:
+        user.resident = False
+    else:
+      user.resident = False
+
+---
+#initializes all counting variables to zero. These count whether or not the given questions are asked. I could have made them true/false questions, but because of how python views 0 as false and non-zero as true, it doesn't matter. 
+code: |
+      has_lawyer_count = 0
+      lawyer_doingstuff_count = 0  
+      can_afford_lawyer_count = 0
+      AB_resident_count = 0
+      AB_matter_count = 0
+      crimfam_count = 0
+      appeal_count = 0
+
+---  
 
 Question: |
   Do you live with anyone?
@@ -36,13 +97,48 @@ Question: |
 fields:
   - First Name: x.name.first
   - Last Name: x.name.last
+ 
+---
+question: |
+  Do you currently have a lawyer?
+yesno: user.has_lawyer
 
 ---
 question: |
-  Do you qualify for Legal Aid?
+  Can you afford a lawyer?
+yesno: user.can_afford_lawyer
+
+---
+question: |
+  Is your lawyer currently acting for you?
+yesno: user.lawyer_doingstuff
+
+---
+question: |
+  Is your matter located in Alberta?
   
-yesno: can_help
-  
+yesno: user.AB_matter
+
+---
+question: |
+  Is your matter a family law matter?
+yesno: user.family_matter
+
+---
+question: |
+  Is your matter a criminal law matter?
+yesno: user.criminal_matter
+
+---
+question: |
+  Do you currently live in Alberta?
+yesno: user.AB_resident
+
+---
+question: |
+  Is your matter an appeal of a matter for which Legal Aid Alberta has previously assisted?
+yesno: user.appeal
+
 ---
 # This presumes, of course, that the user has a pending court date. Will probably modify the time to be a MC between 9:30 and 2 or whatever.
 question: |
@@ -56,34 +152,84 @@ fields:
     
 
 ---
-# I included one of the if statements twice only because I thought it was funny. 
+# As you said, we aren't marked on style. What follows is my rendition of what "tell the user their responses only if they've answered the questions" means to me, and my solution to the same in the classic sledgehammer approach to problem solving. cohabs is not initialized because it plays no role in the current assignment. 
 mandatory: True
 question: Your document is ready.
 attachments:
   - name: Document
     filename: document
     content: |
-      Thank you for your time, ${user.name.first}. We have determined your eligibility for Legal Aid for your ${ format_date(courtDate, format= 'MMMM dd') } court date. 
+      Thank you for your responses, ${user.name.first}
       
-      You have told us that you currently live
-      % if not cohabs:
-      alone, 
+      You have told us:
+      
+      %if appeal_count:
+      Your matter is 
+      %if not user.appeal:
+      not
+      %endif
+      an appeal for which Legal Aid Alberta has previously assisted.
+      %endif
+      
+      % if has_lawyer_count:
+      You
+      % if not user.has_lawyer:
+      do not
+      %endif
+      currently have a lawyer
+      %if lawyer_doingstuff_count:
+      , and they are 
+      %if not user.lawyer_doingstuff:
+      not
+      %endif 
+      currently acting for you.
       % else:
-      with ${ cohabs },
-      % endif
-      and that you
-      % if can_help:
-      qualify for Legal Aid.
-      % else: 
-      do not qualify for Legal Aid.
-      % endif
+      .
+      %endif
+      %endif
       
-      Based on your responses, our complicated algorithm has determined
-      % if can_help:
-      that you qualify for Legal Aid at this time.
-      % else:
-      ,unfortunately, that you do not qualify for Legal Aid at this time. 
-      % endif
+      %if can_afford_lawyer_count:
+      You 
+      %if user.can_afford_lawyer:
+      can
+      %else:
+      cannot
+      %endif
+      afford a lawyer.
+      %endif
       
-      Please be advised that, notwithstanding this communication, you are still required to attend court on ${ format_date(courtDate, format= 'EEEE, MMMM, dd, yyyy') } at ${ format_time(courtTime, format= 'hh:mm a') }.
-  
+      %if AB_resident_count:
+      You are 
+      %if not user.AB_resident:
+      not
+      %endif
+      currently an Alberta resident.
+      %endif
+      
+      %if AB_matter_count:
+      Your 
+      %if crimfam_count:
+      %if user.criminal_matter:
+      criminal
+      %else: 
+      family
+      %endif
+      %endif
+      matter is 
+      %if not user.AB_matter:
+      not
+      %endif
+      in Alberta.
+      %endif
+      
+      %if crimfam_count:
+      %if not user.criminal_matter and not user.family_matter:
+      Your matter is neither a criminal or family issue. 
+      %endif
+      %endif
+      
+      Based on your responses, we have determined that you 
+      %if not user.eligible:
+      do not
+      %endif
+      qualify for Legal Aid Alberta.
