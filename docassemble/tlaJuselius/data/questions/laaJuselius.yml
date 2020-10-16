@@ -108,6 +108,7 @@ attachments:
       * You have ${currency(user.assets)} in assets. 
       * Your income in the last 30 days and in the last year was, respectively, ${currency(user.income30)} and ${currency(user.income)}.
       
+      %if not user.can_afford_lawyer:
       * You live ${"with " + str(cohabs) if cohabs else "alone"}. 
       
       %if cohabs:
@@ -116,7 +117,10 @@ attachments:
       %endfor
       %endif
 
+
+      
       * Your matter is ${"" if user.appeal else "not"} and appeal for which Legal Aid Alberta has previously assisted. 
+      
       
       %if not user.appeal:
       * Your matter is ${"" if user.AB_matter else "not"} located in Alberta
@@ -130,6 +134,7 @@ attachments:
       a family matter.
       %else:
       neither a criminal nor a family matter. 
+      %endif
       %endif
       %endif
       %endif
@@ -168,10 +173,12 @@ code: |
   set_info(user = user)
   financials = [[1668, 20021],[2066, 24788],[2940,35275],[3178, 38134],[3416,40995],[3655,43855]]
   
-  
-  if (user.unrepresented and (user.appeal or user.resident)):
-    user.eligible = True
-  else:
+  if not user.can_afford_lawyer:
+    if (user.unrepresented and (user.appeal or user.resident)):
+      user.eligible = True
+    else:
+      user.eligible = False
+  else: 
     user.eligible = False
       
       
@@ -190,7 +197,7 @@ code: |
   else:
     user.unrepresented = True
 
-reconsider: True
+
 ---
 code: |
   cohabs[i].assets
@@ -210,7 +217,7 @@ code: |
   else:
     total_income30 = user.income30.value
     
-reconsider: True
+
 ---
 code: |
   total_income = 0
@@ -224,7 +231,7 @@ code: |
   else:
     total_income = user.income.value
     
-reconsider: True
+
 ---
 code : |
   length = 0
