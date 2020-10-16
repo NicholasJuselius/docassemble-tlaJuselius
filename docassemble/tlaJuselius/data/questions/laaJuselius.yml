@@ -1,74 +1,13 @@
 objects: 
   - user: Individual
-  - cohabs: DAList.using(object_type=Individual)
- 
----
-
-mandatory: true
-code: |
-  set_info(user = user)
-  user.name.first
-  if user.resident and not user.represented:
-    user.eligible = True
-  else:
-    user.eligible = False
-
----
-# We want to know if the user has a lawyer, and if so whether they are acting on the matter. 
-code: |
-
-  can_afford_lawyer_count += 1
-  if user.can_afford_lawyer:
-    user.represented = True
-  else: 
-    has_lawyer_count += 1
-    # I don't really like this line of questioning because we're asking "can you pay for a lawyer?" "No? Did you pay for one anyways?" 
-    # This will make more sense when can_afford_lawyer is a function and not a question. 
-    if user.has_lawyer:
-      lawyer_doingstuff_count += 1
-      if user.lawyer_doingstuff:
-        user.represented = True
-      else:
-        # I don't understand how law works and whether or not you count as represented if you have a lawyer who isn't acting for you. This is like the case where your retainer has run out and you cannot replenish it?
-        user.represented = False
-    else:
-      user.represented = False
+  - user.income30: Value
+  - user.income: Value
   
----
-#if its an appeal, resident issues are irrelevant. Else, need AB to be location of matter and user. AB_matter and AB_resident are equally important, but we ask for matter first for clarity of code. If you and your matter are both in AB, you may be disqualified if not crim or civ, so those are asked last and bunched together for simplicity. The code will later output "your _____ matter"
-code: |
-  
-  appeal_count += 1
-  if user.appeal:
-    user.resident = True
-  else:
-    AB_matter_count += 1
-    if user.AB_matter:
-      AB_resident_count += 1
-      if user.AB_resident:
-        crimfam_count =+ 1
-        if (user.criminal_matter or user.family_matter):
-          user.resident = True
-        else:
-          user.resident = False
-      else:
-        user.resident = False
-    else:
-      user.resident = False
+  - cohabs: DAList.using(object_type=Individual, complete_attribute = "complete")
+  - cohabs[i].income30: Value
+  - cohabs[i].income: Value
 
 ---
-#initializes all counting variables to zero. These count whether or not the given questions are asked. I could have made them true/false questions, but because of how python views 0 as false and non-zero as true, it doesn't matter. 
-code: |
-      has_lawyer_count = 0
-      lawyer_doingstuff_count = 0  
-      can_afford_lawyer_count = 0
-      AB_resident_count = 0
-      AB_matter_count = 0
-      crimfam_count = 0
-      appeal_count = 0
-
----  
-
 Question: |
   Do you live with anyone?
 yesno: cohabs.there_are_any
@@ -82,11 +21,7 @@ yesno: cohabs.there_is_another
 
 Generic Object: Individual
 Question: |
-  % if x==user:
-  What is your name?
-  % else:
-  What is their name?
-  % endif
+  What is ${"your" if x == user else "their"} name?
 
 # using the logic above because at this time, if I use some of the built in pronoun # functionality, will return e.g. "the first cohabs name" not "their name".
 
@@ -98,11 +33,6 @@ fields:
 question: |
   Do you currently have a lawyer?
 yesno: user.has_lawyer
-
----
-question: |
-  Can you afford a lawyer?
-yesno: user.can_afford_lawyer
 
 ---
 question: |
@@ -136,6 +66,22 @@ question: |
 yesno: user.appeal
 
 ---
+Generic Object: Individual
+question: |
+  Please fill out the following information for ${"yourself" if x==user else x}.
+fields:
+  - Total Assets: x.assets
+  - Do ${"you" if x==user else "they"} currently have an income?: x.income30.exists
+    datatype: yesnowide
+  - What is ${"your" if x==user else "their"} income in the last 30 days?: x.income30.value
+    datatype: currency
+    show if: x.income30.exists
+  - Did ${"you" if x==user else "they"} have an income last year?: x.income.exists
+    datatype: yesnowide
+  - What is ${"your" if x==user else "their"} income for the last year?: x.income.value
+    datatype: currency
+    show if: x.income.exists
+---
 # This presumes, of course, that the user has a pending court date. Will probably modify the time to be a MC between 9:30 and 2 or whatever.
 question: |
   When is your next court date?
@@ -148,7 +94,6 @@ fields:
     
 
 ---
-# As you said, we aren't marked on style. What follows is my rendition of what "tell the user their responses only if they've answered the questions" means to me, and my solution to the same in the classic sledgehammer approach to problem solving. cohabs is not initialized because it plays no role in the current assignment. 
 mandatory: True
 question: Your document is ready.
 attachments:
@@ -156,76 +101,161 @@ attachments:
     filename: document
     content: |
       Thank you for your responses, ${user.name.first}
+     
+      You have told us that: 
       
-      You have told us:
+
+      * You have ${currency(user.assets)} in assets. 
+      * Your income in the last 30 days and in the last year was, respectively, ${currency(user.income30)} and ${currency(user.income)}.
       
-      %if appeal_count:
-      Your matter is 
+      * You live ${"with " + str(cohabs) if cohabs else "alone"}. 
+      
+      %if cohabs:
+      %for cohab in cohabs:
+      ${cohab} made ${currency(cohab.income30.value)} in the last 30 days, and ${currency(cohab.income.value)} last year. 
+      %endfor
+      %endif
+
+      * Your matter is ${"" if user.appeal else "not"} and appeal for which Legal Aid Alberta has previously assisted. 
+      
       %if not user.appeal:
-      not
-      %endif
-      an appeal for which Legal Aid Alberta has previously assisted.
-      %endif
-      
-      % if has_lawyer_count:
-      You
-      % if not user.has_lawyer:
-      do not
-      %endif
-      currently have a lawyer
-      %if lawyer_doingstuff_count:
-      , and they are 
-      %if not user.lawyer_doingstuff:
-      not
-      %endif 
-      currently acting for you.
-      % else:
-      .
-      %endif
-      %endif
-      
-      %if can_afford_lawyer_count:
-      You 
-      %if user.can_afford_lawyer:
-      can
-      %else:
-      cannot
-      %endif
-      afford a lawyer.
-      %endif
-      
-      %if AB_resident_count:
-      You are 
-      %if not user.AB_resident:
-      not
-      %endif
-      currently an Alberta resident.
-      %endif
-      
-      %if AB_matter_count:
-      Your 
-      %if crimfam_count:
+      * Your matter is ${"" if user.AB_matter else "not"} located in Alberta
+      %if user.AB_matter:
+      * You currently ${"" if user.AB_resident else "do not"} live in Alberta
+      %if user.AB_resident:
+      * Your matter is
       %if user.criminal_matter:
-      criminal
-      %else: 
-      family
+      a criminal matter.
+      %elif user.family_matter:
+      a family matter.
+      %else:
+      neither a criminal nor a family matter. 
       %endif
       %endif
-      matter is 
-      %if not user.AB_matter:
-      not
-      %endif
-      in Alberta.
-      %endif
-      
-      %if crimfam_count:
-      %if not user.criminal_matter and not user.family_matter:
-      Your matter is neither a criminal or family issue. 
       %endif
       %endif
       
-      Based on your responses, we have determined that you 
-      %if not user.eligible:
-      do not
+      %if user.can_afford_lawyer:
+      * You can afford a lawyer
+      %else:
+      * You cannot afford a lawyer
+      * You currently ${"" if user.has_lawyer else "do not"} have a lawyer.
+      %if user.has_lawyer:
+      * Your lawyer is ${"" if user.lawyer_doingstuff else "not"} currently acting for you. 
       %endif
-      qualify for Legal Aid Alberta.
+      
+      %endif
+      
+      Your household income renders you 
+      %if (monthly_income < 1) and (yearly_income < 1):
+      financially eligible
+      %elif (monthly_income < 2) and (yearly_income < 2):
+      marginally financially eligible
+      %else:
+      financially ineligible
+      %endif
+      for Legal Aid Alberta.
+      
+      
+      Based on your responses, you ${"" if user.eligible else "do not"} qualify for Legal Aid Alberta. 
+      
+---
+
+mandatory: true
+code: |
+  
+
+  set_info(user = user)
+  financials = [[1668, 20021],[2066, 24788],[2940,35275],[3178, 38134],[3416,40995],[3655,43855]]
+  
+  
+  if ((user.appeal or user.resident) and user.unrepresented):
+    user.eligible = True
+  else:
+    user.eligible = False
+      
+      
+---
+code: | 
+  if (user.AB_matter and user.AB_resident and (user.criminal_matter or user.family_matter)):
+    user.resident = True
+  else:
+    user.resident = False
+
+---
+code: | 
+
+  if (user.can_afford_lawyer or (user.has_lawyer and user.lawyer_doingstuff)):
+    user.unrepresented = False
+  else:
+    user.unrepresented = True
+
+reconsider: True
+---
+code: |
+  cohabs[i].assets
+  cohabs[i].complete = True
+
+---
+
+code: |
+  total_income30 = 0
+  if len(cohabs)>0:
+    for i in range(len(cohabs) + 1):
+      if i < len(cohabs):
+        if cohabs[i].income30.exists:
+          total_income30 = total_income30 + cohabs[i].income30.value
+      else:
+        total_income30 = total_income30 + user.income30.value
+  else:
+    total_income30 = user.income30.value
+    
+reconsider: True
+---
+code: |
+  total_income = 0
+  if len(cohabs)>0:
+    for i in range(len(cohabs) + 1):
+      if i < len(cohabs):
+        if cohabs[i].income.exists:
+          total_income = total_income + cohabs[i].income.value
+      else:
+        total_income = total_income + user.income.value
+  else:
+    total_income = user.income.value
+    
+reconsider: True
+---
+code : |
+  length = 0
+  if len(cohabs) > 0:
+    if len(cohabs) > 5:
+      length = 5
+    else: 
+      length = len(cohabs)
+      
+---
+code: |
+  if total_income30 <= financials[length][0]:
+    monthly_income = 0
+  elif total_income30 <= (financials[length][0])*1.1:
+    monthly_income = 1
+  else: 
+    monthly_income = 2
+    
+---
+code: |
+  if total_income <= financials[length][1]:
+    yearly_income = 0
+  elif total_income <= (financials[length][1])*1.1:
+    yearly_income = 1
+  else: 
+    yearly_income = 2
+  
+---
+code: |
+  if monthly_income > 1 or yearly_income > 1:
+    user.can_afford_lawyer = True
+  else:
+    user.can_afford_lawyer = False
+      
