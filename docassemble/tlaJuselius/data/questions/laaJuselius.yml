@@ -5,7 +5,7 @@ objects:
   
   - cohabs: DAList.using(object_type=Individual, complete_attribute = "complete")
   - cohabs[i].income30: Value
-  - cohabs[i].income: Value
+  - cohabs[i].income: Value 
 
 ---
 Question: |
@@ -149,10 +149,10 @@ attachments:
       Your household income renders you 
       %if (monthly_income < 1) and (yearly_income < 1):
       financially eligible
-      %elif (monthly_income < 2) and (yearly_income < 2):
-      marginally financially eligible
-      %else:
+      %elif (monthly_income > 1) or (yearly_income > 1):
       financially ineligible
+      %else:
+      marginally financially eligible
       %endif
       for Legal Aid Alberta.
       
@@ -169,7 +169,7 @@ code: |
   financials = [[1668, 20021],[2066, 24788],[2940,35275],[3178, 38134],[3416,40995],[3655,43855]]
   
   
-  if ((user.appeal or user.resident) and user.unrepresented):
+  if (user.unrepresented and (user.appeal or user.resident)):
     user.eligible = True
   else:
     user.eligible = False
