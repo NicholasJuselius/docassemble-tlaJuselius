@@ -18,7 +18,7 @@ question: |
 yesno: cohabs.there_is_another
 
 ---
-
+role: client
 Generic Object: Individual
 Question: |
   What is ${"your" if x == user else "their"} name?
@@ -71,13 +71,14 @@ question: |
   Please fill out the following information for ${"yourself" if x==user else x}.
 fields:
   - Total Assets: x.assets
+    datatype: currency
   - Do ${"you" if x==user else "they"} currently have an income?: x.income30.exists
-    datatype: yesnowide
+    datatype: yesno
   - What is ${"your" if x==user else "their"} income in the last 30 days?: x.income30.value
     datatype: currency
     show if: x.income30.exists
   - Did ${"you" if x==user else "they"} have an income last year?: x.income.exists
-    datatype: yesnowide
+    datatype: yesno
   - What is ${"your" if x==user else "their"} income for the last year?: x.income.value
     datatype: currency
     show if: x.income.exists
@@ -94,85 +95,104 @@ fields:
     
 
 ---
-mandatory: True
-question: Your document is ready.
-attachments:
-  - name: Document
-    filename: document
-    content: |
-      Thank you for your responses, ${user.name.first}
+attachment:
+
+  filename: Interview
+  variable name: interview_results
+  content:  |
+    Thank you for your responses, ${user.name.first}
      
-      You have told us that: 
+    You have told us that: 
       
 
-      * You have ${currency(user.assets)} in assets. 
-      * Your income in the last 30 days and in the last year was, respectively, ${currency(user.income30)} and ${currency(user.income)}.
+    * You have ${currency(user.assets)} in assets. 
+    * Your income in the last 30 days and in the last year was, respectively, ${currency(user.income30)} and ${currency(user.income)}.
       
-      %if not user.can_afford_lawyer:
-      * You live ${"with " + str(cohabs) if cohabs else "alone"}. 
+    %if not user.can_afford_lawyer:
+    * You live ${"with " + str(cohabs) if cohabs else "alone"}. 
       
-      %if cohabs:
-      %for cohab in cohabs:
-      ${cohab} made ${currency(cohab.income30.value)} in the last 30 days, and ${currency(cohab.income.value)} last year. 
-      %endfor
-      %endif
+    %if cohabs:
+    %for cohab in cohabs:
+    ${cohab} made ${currency(cohab.income30.value)} in the last 30 days, and ${currency(cohab.income.value)} last year. 
+    %endfor
+    %endif
 
 
       
-      * Your matter is ${"" if user.appeal else "not"} and appeal for which Legal Aid Alberta has previously assisted. 
+    * Your matter is ${"" if user.appeal else "not"} and appeal for which Legal Aid Alberta has previously assisted. 
       
       
-      %if not user.appeal:
-      * Your matter is ${"" if user.AB_matter else "not"} located in Alberta
-      %if user.AB_matter:
-      * You currently ${"" if user.AB_resident else "do not"} live in Alberta
-      %if user.AB_resident:
-      * Your matter is
-      %if user.criminal_matter:
-      a criminal matter.
-      %elif user.family_matter:
-      a family matter.
-      %else:
-      neither a criminal nor a family matter. 
-      %endif
-      %endif
-      %endif
-      %endif
-      %endif
+    %if not user.appeal:
+    * Your matter is ${"" if user.AB_matter else "not"} located in Alberta
+    %if user.AB_matter:
+    * You currently ${"" if user.AB_resident else "do not"} live in Alberta
+    %if user.AB_resident:
+    * Your matter is
+    %if user.criminal_matter:
+    a criminal matter.
+    %elif user.family_matter:
+    a family matter.
+    %else:
+    neither a criminal nor a family matter. 
+    %endif
+    %endif
+    %endif
+    %endif
+    %endif
       
-      %if user.can_afford_lawyer:
-      * You can afford a lawyer
-      %else:
-      * You cannot afford a lawyer
-      * You currently ${"" if user.has_lawyer else "do not"} have a lawyer.
-      %if user.has_lawyer:
-      * Your lawyer is ${"" if user.lawyer_doingstuff else "not"} currently acting for you. 
-      %endif
+    %if user.can_afford_lawyer:
+    * You can afford a lawyer
+    %else:
+    * You cannot afford a lawyer
+    * You currently ${"" if user.has_lawyer else "do not"} have a lawyer.
+    %if user.has_lawyer:
+    * Your lawyer is ${"" if user.lawyer_doingstuff else "not"} currently acting for you. 
+    %endif    
+    %endif
       
-      %endif
-      
-      Your household income renders you 
-      %if (monthly_income < 1) and (yearly_income < 1):
-      financially eligible
-      %elif (monthly_income > 1) or (yearly_income > 1):
-      financially ineligible
-      %else:
-      marginally financially eligible
-      %endif
-      for Legal Aid Alberta.
-      
-      
-      Based on your responses, you ${"" if user.eligible else "do not"} qualify for Legal Aid Alberta. 
-      
+    Your household income renders you 
+    %if (monthly_income < 1) and (yearly_income < 1):
+    financially eligible
+    %elif (monthly_income > 1) or (yearly_income > 1):
+    financially ineligible
+    %else:
+    marginally financially eligible
+    %endif
+    for Legal Aid Alberta.
+       
+    Based on your responses, you ${"" if user.eligible else "do not"} qualify for Legal Aid Alberta. 
+
 ---
+role: reviewer
+question:  |
+  ${ user } is ${"currently" if request else "not currently"} waiting for an approval of the attached memo
 
-mandatory: true
+subquestion: |
+
+  Do you approve it?
+
+attachment: ${ interview_results}      
+      
+yesno: reviewer_response      
+
+
+---
+mandatory: True
+default role: client
+
 code: |
-  
 
+  multi_user = True
+  reviewer_email = "juselius@ualberta.ca"
+  role = 'client'
+  if user_logged_in() and user_info().email == reviewer_email:
+    role = 'reviewer'
+    
   set_info(user = user)
   financials = [[1668, 20021],[2066, 24788],[2940,35275],[3178, 38134],[3416,40995],[3655,43855]]
-  
+
+
+
   if not user.can_afford_lawyer:
     if (user.unrepresented and (user.appeal or user.resident)):
       user.eligible = True
@@ -180,9 +200,82 @@ code: |
       user.eligible = False
   else: 
     user.eligible = False
-      
+     
+  reqsent_marker = 0  
+   
+  if request:
+    request_notification_sent
+    if reqsent_marker:
+      response_notification_sent
+---
+role:
+
+  - client
+
+  - reviewer
+
+mandatory: True
+
+question: Results
+
+subquestion: |
+
+  The request was sent to the reviewer who
+  % if reviewer_response:
+  approved
+  % else:
+  did not approve
+  % endif
+  the request.
+
+
+
+
       
 ---
+event: role_event
+
+question: Waiting on Another User
+
+subquestion: |
+
+  You are not authorized to look at the next screen of this interview.
+
+  
+
+  % if 'client' in role_needed:
+
+  We are waiting for the client, and you are a reviewer.
+
+  % elif 'reviewer' in role_needed:
+
+  We are waiting for the reviewer, and you are the client.
+
+  % endif
+
+  
+
+  Please have the other party go to [this link](${ interview_url() }) to continue.
+
+buttons:
+
+  - Check: refresh
+
+---
+
+code: |
+
+  request_notification_sent = send_email(to=reviewer_email, template=request_notification)
+  reqsent_marker = 1
+---
+
+code: |
+
+  response_notification_sent = send_email(to=email_address,template=response_notification)
+
+---
+
+
 code: | 
   if (user.AB_matter and user.AB_resident and (user.criminal_matter or user.family_matter)):
     user.resident = True
@@ -197,6 +290,43 @@ code: |
   else:
     user.unrepresented = True
 
+---
+
+
+
+template: request_notification
+
+subject: LAW589 Assignment 6
+
+content: |
+  To whom it may concern 
+  ${ user } requires approval of their Legal Aid Alberta eligibility status. Please [click here](${ interview_url() }) to respond.
+
+       
+
+---
+
+template: response_notification
+subject: Response Received
+content: |
+
+  Dear ${ user },
+
+  
+
+  Legal Aid Alberta has provided an answer to your approval request, [click here](${ interview_url() }) to view it.
+
+---
+
+question: |
+
+  Dear ${ user }, your infomation needs to be reviewed before a decision is made. Please indicate whether or not you would like your response given through email. 
+
+fields:
+
+  - Please review my Advice Memo: request
+    datatype: yesno
+  - Email: email_address
 
 ---
 code: |
@@ -204,35 +334,28 @@ code: |
   cohabs[i].complete = True
 
 ---
-
 code: |
   total_income30 = 0
-  if len(cohabs)>0:
-    for i in range(len(cohabs) + 1):
-      if i < len(cohabs):
-        if cohabs[i].income30.exists:
-          total_income30 = total_income30 + cohabs[i].income30.value
-      else:
+  for i in range(len(cohabs)+1):
+    if i < len(cohabs):
+      if cohabs[i].income30.exists:
+        total_income30 = total_income30 + cohabs[i].income30.value
+    else:
+      if user.income30.exists:
         total_income30 = total_income30 + user.income30.value
-  else:
-    total_income30 = user.income30.value
-    
-
 ---
 code: |
   total_income = 0
-  if len(cohabs)>0:
-    for i in range(len(cohabs) + 1):
-      if i < len(cohabs):
-        if cohabs[i].income.exists:
-          total_income = total_income + cohabs[i].income.value
-      else:
+  for i in range(len(cohabs)+1):
+    if i < len(cohabs):
+      if cohabs[i].income.exists:
+        total_income = total_income + cohabs[i].income.value
+    else:
+      if user.income.exists:
         total_income = total_income + user.income.value
-  else:
-    total_income = user.income.value
-    
 
 ---
+#length is the size of family, counting from 0.
 code : |
   length = 0
   if len(cohabs) > 0:
@@ -261,6 +384,15 @@ code: |
   
 ---
 code: |
+  if user.income30.exists:
+    if user.income30.value > financials[0][0]*1.1:
+      user.can_afford_lawyer = True
+      monthly_income = 2
+  if user.income.exists:
+    if user.income.value > financials[0][1]*1.1:
+      user.can_afford_lawyer = True
+      yearly_income = 2
+
   if monthly_income > 1 or yearly_income > 1:
     user.can_afford_lawyer = True
   else:
