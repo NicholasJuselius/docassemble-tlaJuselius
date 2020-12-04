@@ -1,0 +1,591 @@
+objects:
+  - user: Individual
+  - spouse: Individual
+---
+include:
+  - Case_Information.yml
+  - QuestionsNotCoveredElsewhere.yml
+  - For_Include_Final_Project_Personal_spouse_financial_info.yml
+  - Eligibility.yml
+  - ParentingAndChild_1.yml
+---
+event: TheyWin
+
+question: |
+  Your documents
+subquestion: |
+  ${ action_button_html(bundle.url_for(), color='link', label='Download Documents') }
+
+---
+event: DoesntAgree
+Question: |
+  End
+Subquestion: |
+  Thank you for your time. Unfortunately this service is unavailable to you at this time. (Consult your Dayleader about any information you can provide).
+---
+event: Reasons
+Question: |
+  Here are your results
+attachment:
+  filename: Interview
+  variable name: interview_results
+  content:  |
+    Unfortunately, it looks like you do not qualify for Student Legal Services assistance. This determination was made for the following reasons. We hope that this service has provided sufficient information for you, and here are some points of contact for you to proceed without our assistance.
+    
+    The DYOD Clinic is unavailable to individuals:
+    % if not(ci_grounds == 'separate') and not ci_adulteryaffidavit:
+    
+    * whose divorce has a potential to be contested. If you are seeking divorce on the grounds of mental or physical cruelty or adultery and your spouse is unwilling to sign an affidavit attesting to this, then SLS cannot assist you as these matters exceed our capabilities. 
+    % endif
+    % if matrimonial_property_debt:
+    
+    * seeking matrimonial property division
+    % endif
+    % if children.there_are_any and (user.parenting == 'We do not have an agreement in place or we disagree about custody/parenting arrangements.'):
+    
+    * with dependant children who are not in complete agreement about parenting matters
+    % endif
+    % if user.claim_support:
+    
+    * who are claiming spousal support, or concerned that spousal support will be claimed against them.
+    % endif
+    
+    Because these above matters are complicated, you may consider seeking legal advice from a lawyer or from one of the following services:    
+    
+    Consult your Dayleader about services available.
+---
+event: Information
+
+question: |
+  Your documents
+subquestion: |
+  ${ action_button_html(interview_results.url_for(), color='link', label='Download Documents') }
+---
+attachment:
+  filename: Interview
+  variable name: interview_results
+  content:  |
+    Here is a summary of the information we can provide at this time.
+    % if children.there_are_any:
+    [BOLDCENTER]Parenting, Guardianship, Contact, and Access  
+
+    Parenting refers to where and with whom a child resides. Guardianship refers to decision-making authority with regard to a child’s upbringing. Access refers to the time that a parent spends with a child, whereas contact refers to time that a non-parent spends with a child.  
+
+    The only thing that courts are to consider in determining matters related to guardianship, parenting contact, or access is the best interest of the child. The Family Law Act contains a list of the factors  courts will consider in determining the best interest of the child under section 18. Please take a moment to review these factors: http://canlii.ca/t/53jz0. A similar set of factors is included under s.16(3) of the  amended Divorce Act, which comes into force in July 2020. For a copy of the amendments, see Bill C-78 at https://www.parl.ca/DocumentViewer/en/42-1/bill/c-78/royal-assent.  
+
+    Parenting files are extremely fact-specific. It is therefore important to get a thorough history of the care of the child, both before and after the parties’ separation.  
+
+    There is a presumption in favour of as much contact with each parent as is consistent with the best interest of the child. Note that this does not necessarily result in a presumption of shared parenting, as the best interest of the child is always paramount. Denying all access to a child by a parent is extremely difficult. There is a strong presumption in favour of a child having relationships with both of their parents. In order to deny all access, there must be overwhelming evidence that access is not in the best interests of the child.  
+
+    [BOLDCENTER]Child Support  
+
+    Child support is the right of the child to receive financial support from a parent. Because it is the right of the child, parents cannot contract out of or waive child support. Typically, when one parent has the child  less than 60% of the time, they must pay child support; however, this is not a hard and fast rule.  
+
+    There are two types of child support. The first type of child support is called section 3 support, and is  meant to cover the basic necessities of the child. The second type of child support is section 7 support  for what are called ‘extraordinary expenses’. This includes things like the cost of childcare so the other parent can work, certain extracurricular activities, and university tuition.  
+
+    Section 3 child support is calculated according to the Tables found in the Federal Child Support Guidelines. The exact amount depends on the province in which the person paying support (called the ‘payor’) resides, and the number of dependent children. For child support after 2017, use the table look up tool provided at https://justice.gc.ca/eng/fl-df/child-enfant/2017/look-rech.asp
+
+    In situations where parenting is shared (e.g. “50/50”), section 3 child support is calculated on a set-off  basis. The amount of support is calculated by taking the table amount for each parent, and subtracting  the difference. See the following example:  
+    
+    * e.g. Parent A makes $70,000/year; Parent B makes $34,000/year. They share parenting of their  two children on a week-on, week-off basis and both reside in Alberta.  
+    - Under the Tables, Parent A pays $1,019; Parent B pays $511.  
+    - Therefore, the total amount of support paid should be $1,019-$511 = $508 from Parent  A to Parent B.  
+
+    Section 7 expenses are split proportionately to the parties’ incomes. For example, if Parent A makes  $70,000/year and Parent B makes $30,000/year, then Parent A will pay 70% of these expenses and  Parent B will pay 30%.  
+
+    [BOLDCENTER]Child Support Arrears  
+
+    Courts are typically willing to award child support arrears up to three years in the past. However, they  may refuse to do so if there has been an unreasonable delay on the part of the recipient. They may also be willing to go back further if there has been misconduct by the payor (e.g. lying about income, fleeing  the country to avoid paying).  
+    % endif
+    
+    % if ci_dv != 'There has not been domestic violence.':
+    [BOLDCENTER]Restraining and Protection Orders  
+    
+    __Emergency Protection Orders__  
+
+    When violence or threatening behaviour occurs between family members and there is a need for immediate protection, it is possible to apply for an Emergency Protection Order (EPO) under the Prevention Against Family Violence Act (PAFVA).  
+
+    The definition of family members is set out under PAFVA s.1(d), and includes:  
+    
+    * married persons, adult interdependent partners, or people residing together in an intimate  relationship  
+    * parents of one or more children, regardless of their living situation  
+    * relatives by blood, marriage, adoption, or an adult interdependent partnership  
+    * children of the people referred to above  
+    * persons who live together where one person has custody of the other under a court order  
+
+    These applications are made ex parte (i.e. without notice to the other party). These orders prohibit the subject from attending at a specific address or addresses, and from contacting the party who sought the order. EPOs must be reviewed within 9 working days, at which point they can be vacated (i.e. cancelled) or replaced with a Queen’s Bench Protection Order for up to 1 year. At the review, the opposing party will have a chance to present their side of the story and argue why the order should be vacated. In some cases, it may be necessary to hold an oral hearing on the issue. 
+
+    SLS does not assist with EPO review hearings, as they are in the Court of Queen’s Bench. However, you  may have the opportunity to speak to initial EPO applications if you volunteer with the EPO Program during your time with SLS.  
+
+    __Queen’s Bench Protection Orders__  
+    In less-urgent situations, a Queen’s Bench Protection Order may be sought. This application is made with notice to the other party, who will have a chance to tell their side of the story.  
+
+    __Restraining Orders (with/without notice)__  
+    Restraining Orders can be made on a with- or without-notice basis. They are available to family and non family members (recall that EPOs are only available to family members). For example, if a person is being harassed by their neighbour, then a restraining order may be appropriate. Similarly, persons in  dating relationships who do not live together cannot obtain EPOs, and must seek a restraining order  instead.  
+    
+    In emergency situations where there the claimant fears for their safety, a restraining order can be sought on an ex parte basis.  
+    
+    __Peace Bonds/Bail Conditions__  
+    When an individual is charged with an offence, they may be subject to a peace bond or bail conditions that prohibit them from contacting a specific individual. Failure to comply can result in criminal charges  or the revocation of bail.  
+
+    More detailed information on this topic can be found at: www.alberta.ca/alberta-restraining-protection orders.aspx
+    % endif
+    
+    
+    
+    % if matrimonial_property_debt:
+    [BOLDCENTER]Property Division
+    
+    Making claims for the division of family property is outside the scope of the services that SLS can provide; however, you may frequently be asked questions about family property generally. We can provide general information on this topic to callers and walk-ins.  
+
+    The legislation governing property division in Alberta is the Family Property Act (FPA).  The FPA applies to formerly-married persons and Adult Interdependent Partners (AIPs) who separated  after January 1, 2020. Both debts and assets can be family property. Family property falls into two  categories under the FPA:  
+    
+    * Divisible under s. 7(3)  
+    - Property acquired during the marriage that is not exempt under s. 7(2)  
+    * Exempt from division under s. 7(2)  
+    - Gifts from third party to one spouse  
+    - Inheritances  
+    - Property acquired before the relationship  -- the increase in the property’s value since the time of the marriage/relationship of interdependence is divisible  
+    - Awards or settlements for damages in tort  
+    - Proceeds of an insurance policy for one spouse  
+    
+    Typically, property divided under s. 7(3) is divided equally between the spouses. However, section 8 of  the FPA sets out the factors to be considered in dividing property under s.7. At times, a consideration of  these factors may result in a non-equal division of family property. Please review the factors set out  under s.8: http://canlii.ca/t/81r2 
+
+    Property division is a complex topic. Any caller wanting to know more about their entitlements to family  property should consult with a lawyer. 
+    % endif
+    
+    % if user.claim_support:
+    [BOLDCENTER]Spousal Support
+    
+    SLS is not able to directly assist with claims for spousal support. However, we can provide general  information about spousal support. There are three aspects to be considered in determining spousal  support: entitlement, duration, and quantum. 
+    
+    There are three grounds for entitlement to spousal support. A spouse may have a claim under one or more of these grounds.  
+    
+    1. Compensatory: this is typically awarded as compensation for sacrifices made as part of the  marriage. For example, if one party worked and developed their career during the marriage  while the other party stayed at home looking after children, they may be entitled to an award of  compensatory support.  
+    2. Non-compensatory: Also referred to as needs-based, the rationale for this kind of support is that  a spouse who has financial need after a marriage should be supported by their former spouse.  
+    3. Contractual: spouses can contract into an agreement to provide spousal support.  
+    Typically, is entitlement is established, the duration of support is between 0.5-1 year for each year of  marriage. Marriages over 20 years tend to give rise to indefinite support orders.  
+
+    Quantum (i.e. how much support should be paid) is a much more complicated topic, especially when  child support is involved. The formulas for calculating a range can be found in the Spousal Support  Advisory Guidelines (SSAG). The SSAG are not binding, but often awards of spousal support fall within  the ranges set out in the SSAG.  
+    
+    Spousal support is a complex area of law. Callers wishing to know about their specific entitlements  should consult with a lawyer.  
+
+    % endif
+
+---
+attachment:
+  filename: Information on domestic violence
+  variable name: dom_violence
+  content:  |
+    % if ci_dv != 'There has not been domestic violence.':
+    [BOLDCENTER]Restraining and Protection Orders  
+    
+    __Emergency Protection Orders__  
+
+    When violence or threatening behaviour occurs between family members and there is a need for immediate protection, it is possible to apply for an Emergency Protection Order (EPO) under the Prevention Against Family Violence Act (PAFVA).  
+
+    The definition of family members is set out under PAFVA s.1(d), and includes:  
+    
+    * married persons, adult interdependent partners, or people residing together in an intimate  relationship  
+    * parents of one or more children, regardless of their living situation  
+    * relatives by blood, marriage, adoption, or an adult interdependent partnership  
+    * children of the people referred to above  
+    * persons who live together where one person has custody of the other under a court order  
+
+    These applications are made ex parte (i.e. without notice to the other party). These orders prohibit the subject from attending at a specific address or addresses, and from contacting the party who sought the order. EPOs must be reviewed within 9 working days, at which point they can be vacated (i.e. cancelled) or replaced with a Queen’s Bench Protection Order for up to 1 year. At the review, the opposing party will have a chance to present their side of the story and argue why the order should be vacated. In some cases, it may be necessary to hold an oral hearing on the issue. 
+
+    SLS does not assist with EPO review hearings, as they are in the Court of Queen’s Bench. However, you  may have the opportunity to speak to initial EPO applications if you volunteer with the EPO Program during your time with SLS.  
+
+    __Queen’s Bench Protection Orders__  
+    In less-urgent situations, a Queen’s Bench Protection Order may be sought. This application is made with notice to the other party, who will have a chance to tell their side of the story.  
+
+    __Restraining Orders (with/without notice)__  
+    Restraining Orders can be made on a with- or without-notice basis. They are available to family and non family members (recall that EPOs are only available to family members). For example, if a person is being harassed by their neighbour, then a restraining order may be appropriate. Similarly, persons in  dating relationships who do not live together cannot obtain EPOs, and must seek a restraining order  instead.  
+    
+    In emergency situations where there the claimant fears for their safety, a restraining order can be sought on an ex parte basis.  
+    
+    __Peace Bonds/Bail Conditions__  
+    When an individual is charged with an offence, they may be subject to a peace bond or bail conditions that prohibit them from contacting a specific individual. Failure to comply can result in criminal charges  or the revocation of bail.  
+
+    More detailed information on this topic can be found at: www.alberta.ca/alberta-restraining-protection orders.aspx
+    % endif
+---
+Question: |
+  Introduction to the Do Your Own Divorce application aid
+  
+Subquestion: |
+  Hello, SLS Edmonton Caseworkers! This online application exists to help you physically out forms that are required for a divorce in the province of Alberta. This is not an official online legal application for divorce. The language and format of this document is geared to help you work with members of the public. At all times, your Dayleader remains your go-to resource for up-to-date legal information and any questions you may have.
+  
+  This application aid is a work in progress, and your feedback is essential. We want to hear from you! Please share feedback and questions with the team via (email address TBC with SLS).  
+  
+  From here on in, we're helping you address a member of the public who has called SLS. Keep it professional, simple, friendly and accurate. You will likely need to tailor the level of your language to the caller.
+
+  ## How does it work right now?
+
+  There are several legal documents required to apply for divorce in Alberta. Filling out the forms may be repetitive, lengthy, and confusing. This online application exists to help you fill out the form. Neither this application nor Student Legal Services purports to fill out the form in your stead.  
+  
+  At the end of this application, several documents will be produced that contain the personal information you have entered. Student Legal Services of Edmonton will use these documents to assess your eligibility for the Do Your Own Divorce (DYOD) program, but this information will be kept confidential and will not be shared to outside parties.   
+  
+  If you qualify, Student Legal Services of Edmonton will fill in the required court documents and go over the details of them with you as part of our DYOD clinic. You will need to double check all information contained in these forms and Student Legal Services of Edmonton does not take responsibility for any errors in the final forms. After you have reviewed your documents with a Student Legal Services of Edmonton volunteer, the forms will be reviewed by an advising lawyer for correctness, but they cannot verify the truth of any representations you make in the documents.   
+
+fields: 
+  - Please choose:: wantsdocs
+    choices:
+      - I want to apply for assistance from Student Legal Services of Edmonton: True
+      - At this time, I want to use this service for information on divorce in Alberta only.: False
+---
+Question: |
+  Waiver
+subquestion: |
+  ## I understand that …
+  * Completion of this form does not constitute a legal service or advice.
+  * This form may take a long time to complete and I may lose any or all progress if I do not have the required documentation on hand.
+  * This form and service is provided to assist me in filling out several documents, and does not in itself represent any legal process or entity.
+  * While this form contains information about the divorce process in Alberta, *nothing* contained in this application constitutes legal advice.
+  * Completion of this form will not necessarily result in a successful divorce application.
+  * I understand that the completion of this form may not necessarily result in the accurate completion of the forms required for a divorce in Alberta. I realize it is up to me to double check all completed forms.
+
+fields:
+  - I have read and agree to the above terms: earlyexit
+    datatype: yesnoradio
+---
+mandatory: true
+code: |
+  wantsdocs
+  if not earlyexit:
+    DoesntAgree
+  else:
+    if wantsdocs:
+      if user.IsEligible:
+        documents_list = list()
+        if ci_dv != 'There has not been domestic violence.':
+          documents_list.append(dom_violence)
+        documents_list.append(EligibilityAnalysis)
+        if children.there_are_any:
+          documents_list.append(ChildrenInfo)
+        documents_list.append(First)
+        documents_list.append(Second)
+        documents_list.append(Third)
+        documents_list.append(Fourth)
+        documents_list.append(Fifth)
+        documents_list.append(Sixth)
+        documents_list.append(Seventh)
+        bundle = zip_file(documents_list, filename= "Documents.zip")     
+        TheyWin
+      else:
+        Reasons
+    else:
+      Information
+---
+attachments:
+  - variable name: First
+    filename: 01Divorce
+    docx template file: 01Divorce.docx
+    valid formats:
+      - docx
+    fields:
+      "SelectJudicialCentre": ${judicial_centre}
+      "Plaintiff": ${user.name}
+      "Defendant": ${spouse.name}
+      "AddressForService": ${address_for_service}
+      "DateOfMarriage": ${marriage_date}
+      "PlaceOfMarriage": ${marriage_location}
+      "CohabitationDate": ${cohab_date_code}
+      "CohabitationEndDate": ${cohab_end_date_code}
+      "PlaintiffAddress": ${user.mailing_address}
+      "PlaintiffDateOfBirth": ${user.DOB}
+      "PlaintiffPlaceOfBirth": ${user.POB}
+      "PlaintiffBirthSurname": ${user.SurnameAtBirth}
+      "PlaintiffMarriageSurname": ${user.SurnameAtMarriage}
+      "PlaintiffMaritalStatusAtMarriage": ${user.MaritalStatus}
+      "DefendantAddress": ${spouse.loc}
+      "DefendantDateOfBirth": ${spouse.DOB}
+      "DefendantPlaceOfBirth": ${spouse.POB}
+      "DefendantBirthSurname": ${spouse.SurnameAtBirth}
+      "DefendantMarriageSurname": ${spouse.SurnameAtMarriage}
+      "DefendantMaritalStatusAtMarriage": ${spouse.MaritalStatus}
+      "varSeparateAndApart": ${varSepApart}
+      "varAdultery": ${varAdultery}
+      "varAbuse": ${varCruelty}
+      "ResidencyRequirement": ${varResReq}
+      "varBarToDivorce": ${BarToDivorceCode}
+      "DependantChild": ""
+      "DependantChildBirth": ""
+      "ProposedCustody": ""
+      "ProposedAccess": ""
+      "ProposedFinancialArrangments": ""
+      "Agreement": ""
+      "OtherProceedings": ""
+      "varSpousalSupport213": 1
+      "SpousalSupportOther": ""
+      "varRemedyDivorce": 1
+      "varRemedyCustody": 0
+      "varRemedyAccess": 0
+      "varRemedySupport": 0
+      "varRemedyRetroChildSupport": 0
+      "varRemedyPlaintiffSupport": 0
+      "varRemedyDefendantSupport": 0
+      "varRemedyRetroSpousalSupport": 0
+      "varRemedyRestrainingOrder": 0
+      "varRemedyOther": 1
+      "OtherRelief": "costs, if contested."
+      "varRemedyCosts": 0
+
+  - variable name: Second
+    valid formats:
+      - docx
+    filename: 02ServiceAffidavit
+    docx template file: 02ServiceAffidavit.docx
+    fields:
+      "DefendantAddress": ""
+      "AddressForService": ${address_for_service}
+      "Defendant": ${spouse.name}
+      "Plaintiff": ${user.name}
+      "JudicialCentre": ${judicial_centre} 
+  - variable name: Third
+    filename: 03NoteDefault
+    docx template file: 03NoteDefault.docx
+    valid formats:
+      - docx    
+    fields:
+      "varAreTheyNoted": "is"
+      "varJudicialCentre": ${judicial_centre}
+      "AddressForService": ${address_for_service}
+      "DefendantAndStatus": ${spouse.name}, the Defendant
+      "Defendant": ${spouse.name}
+      "PlaintiffAndStatus": ${user.name}, the Plaintiff
+      "Plaintiff": ${user.name}
+      "varHaveTheyResponded": "has not"     
+      
+  - variable name: Fourth
+    filename: 04ApplicantAffidavit
+    docx template file: 04ApplicantAffidavit.docx
+    valid formats:
+      - docx    
+    fields:
+      "JudicialCentre": ${judicial_centre}
+      "Plaintiff": ${user.name}
+      "Defendant": ${spouse.name}
+      "AddressForService": ${address_for_service}
+      "PlaintiffCity": #Need Alberta city
+      "DefendantLastKnownAddress": ${spouse.loc}
+      
+      "varMarriedWithCertificate": ${varMCertificate}
+      "DateOfMarriageCert": ${MCert1}
+      "PlaceOfMarriageCert": ${MCert2}
+      "WhoGaveYouAMarriageCertificate": ${MCert3}
+      
+      "varMarriedWithOther": ${varMOther}
+      "PlaceOfMarriage": ${MOth1}
+      "DateOfMarriage": ${MOth2}
+      "MarriageLicence": ${MOth3}
+      "OfficiatiorName": ${MOth4}
+      "OfficiatorTitle": ${MOth5}
+      "Witness1": ${MOth6}
+      "Witness2": ${MOth7}
+      
+      "varResidencyRequirement": ${varResReq}
+      
+      "varSeparateAndApart": ${varSepApart}
+      "SeparationDate": ${SepDate}
+      "SeparationCityTown": ${SepCity}
+      "varAdultery": ${varAdultery}
+      "varCruelty": ${varCruelty}
+      "varProvinceOfSeparation": ${SepLoc}
+      
+      "varWaivedSpousal": 1
+      "varWantsSpousalSupport": 0 
+      "varWhoPays": 0
+      "varWhoIsPaid": 0
+      "varWhoMaintainsHealthCoverage": 0
+      "varReliefDivorce": 1
+      "varReliefParentingArrangement": 0 
+      "varChildSupportOrder": 0 
+      "varSpousalSupportOrder": 0 
+      "varHealthCoverageOrder": 0
+      "OtherRelief": "Costs, if contested."
+      "varOtherRelief": 1
+      "varCosts": 0
+  
+  - variable name: Fifth
+    filename: 05RequestForDivorce
+    docx template file: 05RequestForDivorce.docx
+    valid formats:
+      - docx    
+    fields:
+      "JudicialCentre": ${judicial_centre}
+      "varNoConsentButOrder": 0
+      "AddressForService": ${address_for_service}
+      "DefendantFiledADocument": ""
+      "DefendantCounselAddress": ""
+      "Defendant": ${spouse.name}
+      "PlaintiffCounselAddress": ""
+      "JudgeName": ""
+      "varNotRespondedToClaim": 0
+      "Plaintiff": ${user.name}
+      "varConsentedToAndSigned": 0
+      "DateOfOrder": ""
+      "DefendantAddressForService": "" 
+      "varDidRespondToClaim": 0
+  - variable name: Sixth
+    filename: 06DivorceJudgment
+    docx template file: 06DivorceJudgment.docx
+    valid formats:
+      - docx    
+    fields:
+      "AddressForService": ${address_for_service}
+      "Defendant": ${spouse.name}
+      "Plaintiff": ${user.name}
+      "MarriageDate": ${marriage_date}
+      "MarriageLocation": ${marriage_location}
+      
+  - variable name: Seventh
+    filename: 07FeeWaiver
+    docx template file: 07FeeWaiver.docx
+    valid formats:
+      - docx    
+    fields:
+      "varNumberOfHousehold": 0
+      "AddressForService": ${address_for_service}
+      "varCommonLaw": 0
+      "varMarried": 1
+      "varAIP": 0
+      "varSingle": 0
+      "WorkPhone": ${user.phone}
+      "Plaintiff": ${user.name}
+      "HomePhone": ${phone_no}
+      "JudicialCentre": ${judicial_centre}
+---
+code: |
+  if didntlivetogether:
+    cohab_date_code = "N/A"
+  else: 
+    cohab_date_code = cohab_date
+---
+code: |
+  if didntlivetogether:
+    cohab_end_date_code = "N/A"
+  else: 
+    cohab_end_date_code = cohab_end_date
+---
+code: |
+ if user.phone_yesno:
+   phone_no = user.phone
+ else:
+   phone_no = "N/A"
+   
+---
+code: |
+  if not ci_MarriedInCanada:
+    varMCertificate = 0
+    varMOther = 1
+    MCert1 = ""
+    MCert2 = ""
+    MCert3 = ""
+    MOth1 = marriage_date
+    MOth2 = marriage_location
+    MOth3 = certtype
+    MOth4 = officiator_name
+    MOth5 = officiator_title
+    MOth6 = witness1
+    MOth7 = witness2
+  else:
+    varMCertificate = 1
+    varMOther = 0
+    MCert1 = marriage_date
+    MCert2 = marriage_location
+    MCert3 = who_gave_the_certificate
+    MOth1 = ""
+    MOth2 = ""
+    MOth3 = ""
+    MOth4 = ""
+    MOth5 = ""
+    MOth6 = ""
+    MOth7 = ""
+---
+question: |
+  Information about your marriage
+Subseqestion: |
+  Please answer the following, exactly as they appear on your document:
+
+fields: 
+  - I will be including as evidence a: certtype
+    choices:
+      - marriage licence
+      - certificate of marriage from a religious ceremony
+      - marriage certificate from a jurisdiction outside of Canada
+  - The date of your marriage: marriage_date
+    datatype: date
+  - The location of your marriage: marriage_location
+  - The name of the person who officiated your marriage: officiator_name
+  - The title of the person who officiated your title: officiator_title
+  - The name of the first witness to your ceremony: witness1
+  - The name of the second witness to your ceremony: witness2
+      
+---
+Question: |
+ Information about your marriage certificate
+Subquestion: |
+  Please provide the following information exactly as it is presented on your marriage certificate.
+  
+fields:
+  - The date of your marriage: marriage_date
+    datatype: date
+  - The location of your marriage: marriage_location
+    hint: City
+  - Where was your marriage certificate issued?: who_gave_the_certificate
+    choices:
+      - Alberta: The province of Alberta
+      - British Columbia: The province of British Columbia
+      - Manitoba: The province of Manitoba
+      - New Brunswick: The province of New Brunswick
+      - Newfoundland and Labrador: The province of Newfoundland and Labrador
+      - Northwest Territories: The Northwest Territories
+      - Nova Scotia: The province of Nova Scotia
+      - Nunavut: The territory of Nunavut
+      - Ontario: The province of Ontario
+      - Prince Edward Island: The province of Prince Edward Island
+      - Quebec: The province of Quebec
+      - Saskatchewan: The province of Saskatchewan
+      - Yukon: The Yukon territory
+---
+code: |
+  if varSepApart:
+    SepDate = ci_separate_date
+    SepCity = ci_separate_location_city
+    SepLoc = ci_separate_location_province
+  else:
+    SepDate = ''
+    SepCity = ''
+    SepLoc = ''
+  
+    
+---
+code: |
+ if (ci_grounds == 'cruelty') or (ci_grounds == 'separate'):
+   ci_adulteryaffidavit = False
+  
+---
+code: |
+  if not ci_grounds == 'cruelty':
+    if (ci_grounds == 'separate') or ci_adulteryaffidavit:
+      if not matrimonial_property_debt:
+        if not children.there_are_any or not (user.parenting == 'We do not have an agreement in place or we disagree about custody/parenting arrangements.'):
+          if not user.claim_support:
+            user.IsEligible = 1
+          else:
+            user.IsEligible = 0
+        else:
+          user.IsEligible = 0 
+      else:
+        user.IsEligible = 0
+    else:
+      user.IsEligible = 0
+  else:
+    user.IsEligible = 0
+---
+code: |
+  if not user.household_income_earner:
+    user.household_income_earner_code = 0
+  else: 
+    user.household_income_earner_code = user.household_income_earner

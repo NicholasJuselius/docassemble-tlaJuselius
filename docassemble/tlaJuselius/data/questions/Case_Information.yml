@@ -1,0 +1,124 @@
+#Monica's code
+---
+question: Are you a resident of Alberta?
+field: ci_residency
+subquestion: You (or your spouse) must have lived in Alberta for one year prior to the application for divorce to be eligible for divorce in Alberta.
+choices:
+  - I have lived in Alberta for at least 1 year.
+  - My spouse has lived in Alberta for at least 1 year.
+  - We have both been living in Alberta for at least 1 year.
+under: |
+  If neither yourself nor your spouse has been a resident for at least 1 year prior to the divorce, you must seek divorce in another jurisdiction. 
+---
+question: Do you have a marriage certificate?
+Subquestion:  |
+  You will need your marriage certificate that was issued by the province.
+ 
+  Most people do not receive a marriage certificate from the government unless they order one. It is not sent automatically.
+ 
+  If you were married in Alberta, you can order a marriage certificate from any registry office. If you were married in another province, search “marriage certificate” on the government home page for that province.
+fields:
+  - I was married: ci_MarriedInCanada
+    datatype: yesnoradio
+    choices:
+      - in Canada: True
+      - outside of Canada: False
+  - test: ci_HasCertificate
+    show if: ci_MarriedInCanada
+    input type: radio
+    choices:
+      - I have a copy of my Marriage Cerficate or other official document: True
+      - I will order a copy of my official document from a provincial registries office: False
+  - test: ci_HasCertificateNotInCanada
+    show if: 
+      variable: ci_MarriedInCanada
+      is: False
+    input type: radio
+    choices:
+      - I have a copy of my official Marriage Certificate: True
+      - I will collect the date and location of marriage, name and title of officiator, and names of witnesses to the ceremony prior to attending the DYOD clinic: False
+     
+      
+---
+question: |
+  Why are you getting divorced?
+subquestion: |
+  There are three grounds (reasons) for divorce in Canada, and to receive a divorce you must choose exactly one of the following: 
+fields: 
+  - Grounds for Divorce: ci_grounds
+    input type: radio
+    choices:
+      - Living separate and apart for one year: 'separate'
+      - Adultery – i.e. your spouse has had sexual relations with a person other than you: 'adultery'
+      - Mental or physical cruelty that made it impossible to continue living together: 'cruelty'
+  - Is your spouse willing to sign an Affidavit attesting to having committed adultery: ci_adulteryaffidavit
+    datatype: yesnoradio
+    show if: 
+      variable: ci_grounds
+      is: 'adultery'
+  - When did you and your spouse begin to live separate and apart?: ci_separate_date
+    datatype: date
+    show if: 
+      variable: ci_grounds
+      is: 'separate'
+
+---
+question: Is there a court file open for your divorce?
+field: ci_courtfile
+input type: radio
+choices:
+  - There is no court file open for my divorce and I have not been served with divorce papers from my spouse
+  - It is possible there is a court file open for my divorce (in any jurisdiction or place)
+
+---
+question: Has there been domestic violence throughout the course of your relationship?
+subquestion: Select all that apply
+field: ci_dv
+datatype: checkboxes
+choices:
+  - There has not been any domestic violence.
+  - There is a history of domestic violence with my spouse.
+  - I am concerned for my safety and would like information about domestic violence resources.
+---
+question: |
+  Collusion
+subequestion: |
+  If you are claiming for divorce on the grounds of either mental or physical cruelty, or adultery, then Canada legislation requires that you have not colluded, connived, or condoned the action that has led to the divorce. 
+
+fields: 
+ - I have not connived at or condoned the grounds complained of prior to bringing this divorce action: ci_bartodivorce
+   datatype: yesnoradio
+---
+code: |
+  if ci_grounds == 'separate': 
+    varSepApart = 1
+    varCruelty = 0
+    varAdultery = 0
+  if ci_grounds == 'adultery':
+    varSepApart = 0
+    varCruelty = 0
+    varAdultery = 1
+  if ci_grounds == 'cruelty':
+    varSepApart = 0
+    varCruelty = 1
+    varAdultery = 0
+---
+code: |
+  if ci_residency == 'I have lived in Alberta for at least 1 year.':
+    varResReq = "Plaintiff"
+  if ci_residency == 'My spouse has lived in Alberta for at least 1 year.':
+    varResReq = "Defendant"
+  if ci_residency == 'We have both been living in Alberta for at least 1 year.':
+    varResReq = "Plaintiff"
+    
+---
+code: |
+  if varCruelty or varAdultery:
+    if ci_bartodivorce:
+      BarToDivorceCode = 1
+    else:
+      BarToDivorceCode = 0
+  else: 
+    BarToDivorceCode = 0
+    
+    

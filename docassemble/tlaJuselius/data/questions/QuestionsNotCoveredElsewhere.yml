@@ -1,0 +1,52 @@
+question: | 
+  Judicial Centre
+subquestion: |
+  Where will you be submitting your divorce papers?
+fields:
+  - In the Court of Queen's Bench in: judicial_centre
+    choices:
+      - Calgary
+      - Drumheller
+      - Edmonton
+      - Fort McMurray
+      - Grande Prairie
+      - Lethbridge
+      - Medicine Hat
+      - Peace River
+      - Red Deer
+      - St. Paul
+      - Wetaskiwin
+---
+Question: |
+  Marriage Information
+  
+fields:
+  - When were you married: marriage_date
+    datatype: date
+  - Where were you married: marriage_location
+    datatype: location
+    hint: City, Province, Country (if not Canada)
+
+---
+Question: | 
+  Cohabitation
+  
+fields:
+  - We didn't live together: didntlivetogether
+    datatype: yesno
+  - When did you begin living with your former spouse?: cohab_date
+    datatype: date
+    required: False
+  - When did you stop living with your former spouse?: cohab_end_date
+    datatype: date
+    required: False
+
+---
+Question: |
+  Address for Service
+subquestion: |
+  The Court and your former spouse will have to send any documents related to your divorce to this address. There must be someone present at the location who can receive registered mail on your behalf, so it cannot be a PO box address or similar.  
+  
+fields:
+  Address for Service: address_for_service
+  default: ${user.mailing_address}

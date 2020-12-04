@@ -1,0 +1,69 @@
+objects:
+  - children: DAList.using(object_type=Individual)
+  - user: Individual
+---
+object: Individual
+question: |
+  What is your child's name?
+fields:
+  - First Name: children[i].name.first
+  - Last Name: children[i].name.last
+---
+question: Do you have any dependant children with your spouse?
+yesno: children.there_are_any
+---
+question: Do you have any other dependant children with your spouse?
+yesno: children.there_is_another
+---
+
+question: |
+ I need some information about ${children[i]}.
+ 
+fields:
+  - How old is ${children[i]}?: children[i].age
+  - Who does ${children[i]} live with? Please give their first and last name and relationship to the child.: children[i].caregiver
+  - In what city does ${children[i]} live?: children[i].loc
+  - Is ${children[i]} a dependant?  : children[i].dependant
+    datatype: yesnoradio
+under: |
+  If the child is over 18 they can still be considered dependant if they are living with one of their parents and are enrolled full-time in school.
+---
+question: |
+  Parenting and Child Support
+fields: 
+  - Do you have a court order, or a written or verbal agreement in place over parenting and custody? Do you disagree about parenting time or custody?: user.parenting
+    choices:
+      - There is a custody/parenting order in place.
+      - We have a written agreement in place and both parents are happy with it.
+      - We have a verbal agreement in place and both parents are happy with it.
+      - We do not have an agreement in place or we disagree about custody/parenting arrangements.
+  - Date of the court order: user.parenting_dateoforder
+    datatype: date
+    show if:
+      variable: user.parenting
+      is: 'There is a custody/parenting order in place.'
+  - Court: user.parenting_court 	
+    show if: 
+      variable: user.parenting
+      is: 'There is a custody/parenting order in place.'
+  - Do you have a child support order or agreement in place? Are you receiving or paying for child support?: user.CS
+    choices:
+      - I am currently receiving child support from the other parent.
+      - I am currently paying child support to the other parent.
+      - There is no child support agreement in place.
+  - Amount you receive per month: user.CSreceives
+    datatype: currency
+    show if: 
+      variable: user.CS
+      is: 'I am currently receiving child support from the other parent.'
+  - Amount you pay each month: user.CSpays
+    datatype: currency
+    show if:
+      variable: user.CS
+      is: 'I am currently paying child support to the other parent.'
+  - I have taken the Parenting After Separation Course: user.PAS
+    datatype: yesnoradio
+under: |
+  If you and your spouse disagree on custody, parenting, or child support, you both must speak to your own lawyers before proceeding with the DYOD Clinic.
+  The Federal Child Support Lookup Table is [here](https://justice.gc.ca/eng/fl-df/child-enfant/2017/look-rech.asp).
+  If you have not taken the Parenting After Separation course, you may proceed with the clinic, but your divorce cannot be finalized until the PAS certificate is registered with the court. The Parenting After Divorce course is found [here](https://www.alberta.ca/pas.aspx).

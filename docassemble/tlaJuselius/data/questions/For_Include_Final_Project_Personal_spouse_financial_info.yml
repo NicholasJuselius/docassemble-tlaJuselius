@@ -1,0 +1,200 @@
+# This is the document with questions about the user and spouse
+# Name of document: For_Include_Final_Project_Personal_spouse_financial_info.yml
+
+generic object:  Individual
+question:  |
+  What is ${ x.object_possessive('name') }?
+  
+Subquestion: |
+  Please enter the name exactly as it appears on the marriage certificate. 
+fields:
+  - Title: x.title
+    choices:
+      - Ms.
+      - Mr.
+      - Mrs.
+      - Other
+  - Preferred Title: x.title
+    show if:
+      variable: x.title
+      is: Other
+  - First Name: x.name.first
+  - Last Name: x.name.last
+---
+question:  |
+  Please enter the following information about yourself. 
+  
+Subquestion:  |
+  We will use this information to communicate with you. It is important to inform SLS of any changes in your contact details as soon as possible.
+fields:
+  - Can you provide a mailing address?: user.mailing_address_yesno
+    datatype: yesnoradio
+  - Mailing address: user.mailing_address
+    show if: user.mailing_address_yesno
+    required: False
+  - Can you provide a phone number?: user.phone_yesno
+    datatype: yesnoradio
+  - Telephone number: user.phone
+    show if: user.phone_yesno
+    datatype: number
+    required: False
+  - Can you provide an email address?: user.email_yesno
+    datatype: yesnoradio
+  - Email address: user.email
+    show if: user.email_yesno
+    required: False
+  - How would you like us to communicate with you?: user.comm_preference
+    input type: radio
+    choices:
+      - Call my provided phone number
+      - Regular mail (post) to my mailing address
+      - Email
+      
+---
+Question: |
+  Language
+fields:
+  - Please indicate your comfort level (select all that applies): user.language
+    datatype: checkboxes
+    choices:
+      - I read and write in English
+      - I have trouble reading or writing in English
+      - I plan to bring a family member, friend, or translator with me to the DYOD Clinic
+    help:  |
+      If you have trouble communicating in English SLS can contact your family member, friend, or translator about your DYOD Application with your permission.
+  - I would like SLS to contact my family member, friend or translator about my DYOD application and I give SLS permission to do so: user.interpretor_contactyesno
+    datatype: yesnoradio
+  - To give permission, please provide that person’s name and phone number in the space below: user.interpretor_info
+    show if: user.interpretor_contactyesno
+---
+question:  |
+  Address of spouse
+subquestion: |
+  What is your spouse's current address or location? Enter "Unknown" if you do not know where you spouse is currently located.
+fields:
+  - no label: spouse.loc
+---
+question:  |
+  Are you or your spouse claiming spousal support, pension, medical benefits, or other benefits?
+Subquestion:  |
+  If it is possible that you or your spouse may want to claim spousal support or be entitled to pension or other benefits, you must seek legal advice before participating in the DYOD Clinic.
+yesno: user.claim_support
+help: |
+  SLS is not able to directly assist with claims for spousal support. However, we can provide general information about spousal support. There are three aspects to be considered in determining spousal support: entitlement, duration, and quantum. 
+
+  There are three grounds for entitlement to spousal support. A spouse may have a claim under one or  more of these grounds.  
+  
+  1. Compensatory: this is typically awarded as compensation for sacrifices made as part of the marriage. For example, if one party worked and developed their career during the marriage while the other party stayed at home looking after children, they may be entitled to an award of  compensatory support.  
+  
+  2. Non-compensatory: Also referred to as needs-based, the rationale for this kind of support is that a spouse who has financial need after a marriage should be supported by their former spouse. 3. Contractual: spouses can contract into an agreement to provide spousal support.  
+
+  Typically, if entitlement is established, the duration of support is between 0.5-1 year for each year of  marriage. Marriages over 20 years tend to give rise to indefinite support orders.  
+
+  Quantum (i.e. how much support should be paid) is a much more complicated topic, especially when child support is involved. The formulas for calculating a range can be found in the Spousal Support Advisory Guidelines (SSAG). The SSAG are not binding, but often awards of spousal support fall within the ranges set out in the SSAG.  
+
+  Spousal support is a complex area of law. Callers wishing to know about their specific entitlements should consult with a lawyer.  
+
+
+---
+question:  |
+  Please enter the following financial information.
+Subquestion:  |
+  Click the help buttons below for more details.
+fields:
+  - What is your monthly income (click here for additional information): user.monthly_income
+    datatype: currency
+    min: 0
+    help:  |
+      This amount should match the amount of money going into your bank account each month. Your income includes employment income, pension, AISH, social assistance, spousal support, and any money transfers from friends and family. This amount does not include child support.
+  - How many dependents do you have (click here for additional information): user.number_of_dependents
+    datatype: integer
+    min: 0
+    help:  |
+      For this DYOD Clinic, a dependent is someone you are supporting financially. A dependent could include a minor child, a spouse who does not work, an adult child who is in school or has a disability, an elderly parent, etc.
+  - Are you currently living with a partner or family member?: user.household_income_earner
+    datatype: yesnoradio
+  - How much monthly income does the person you are living with make?: user.household_income_earner_monthly
+    datatype: currency
+    show if: user.household_income_earner
+    min: 0
+  - How will you provide proof of income?: user.confirm_attach_income_docs
+    input type: combobox
+    choices:
+      - three most recent months of pay statements from a steady source of income
+      - six most recent months of bank statements.
+    required: True
+    
+under: |
+  Note: If you do not have a steady source of income (e.g. you have recently changed jobs, have become recently unemployed, or are on maternity leave), we will require bank statements as proof of your income. SLS will accept copies as printed by a bank teller, received in the mail, or printed from online banking.
+
+post: |
+  SLS will contact you after completing this form for proof of income, and your application will be considered incomplete until you provide proof of income. 
+
+---
+Generic Object: Individual
+Question: |
+  Required personal information for ${x.name}
+subquestion: |
+  Please enter the following information as it appears on your marriage certificate or other legal certifying document. 
+  
+fields:
+  - Please enter ${ x.object_possessive('date of birth')}: x.DOB
+    datatype: date
+  - Please enter ${ x.object_possessive('place of birth') }: x.POB
+    hint: Province, Country
+    
+---
+Generic Object: Individual
+Question: |
+  Required personal information for ${x.name}
+subquestion: |
+  Please fill out the following information as it appears on your marriage certificate or other legal certifying documents, or answer to the best of your ability. 
+  
+fields:
+  - What was ${ x.object_possessive('surname at **birth**')}: x.SurnameAtBirth
+    default: x.name.last
+  - What was ${ x.object_possessive('surname just before the time of **marriage** - after you got married you may have changed this name')}: x.SurnameAtMarriage
+    default: x.name.last
+  - At the time of marriage, what was ${ x.object_possessive('martial status')}: x.MaritalStatus
+    choices:
+      - Unmarried
+      - Widowed
+      - Other
+  - Please enter their marital status: x.MaritalStatus
+    show if:
+      variable: x.MaritalStatus
+      is: Other
+---
+code: |
+ if not user.mailing_address_yesno:
+   user.mailing_address = "N/A"
+ if not user.phone_yesno:
+   user.phone = "N/A"
+ if not user.email_yesno:
+   user.email = "N/A"
+---
+question:  |
+  Please enter the following information about your matrimonial property.
+Subquestion:  |
+   Matrimonial property is any property or debt that was acquired during the marriage by either party.
+ 
+fields:
+  - Is there any matrimonial property or debt?: matrimonial_property_debt
+    datatype: yesnoradio
+    help:  |
+      Matrimonial property or debt is property or debt that was acquired during the marriage. Typical items to be divided include:
+      - House
+      - Vehicles
+      - Bank Accounts
+      - RRSPs
+      - Loans/Lines of Credit
+      - Credit Card Debt
+  - Did you and your spouse have an agreement in writing about how to divide the matrimonial property?: matrimonial_written_agreement
+    datatype: yesno
+    show if: matrimonial_property_debt
+  - Did each party receive independent legal advice prior to coming to Do Your Own Divorce Clinic?: matrimonial_independent_legal
+    datatype: yesno
+    show if: matrimonial_property_debt
+    help:  |
+      * If you have matrimonial property or debt, you must seek independent legal advice about your property division before participating in the DYOD Clinic.
+      * What is independent legal advice? It means both you and your spouse speaking to seperate lawyers to have your rights and property agreement (if there is one in place) explained, and to have signed specific documents in front of those lawyers stating that we have sought independent legal advice.

@@ -1,0 +1,131 @@
+#Governs user eligibility
+objects:
+  - user: Individual
+  - spouse: Individual
+---
+include:
+  - Case_Information.yml
+  - QuestionsNotCoveredElsewhere.yml
+  - For_Include_Final_Project_Personal_spouse_financial_info.yml
+  - ParentingAndChild_1.yml
+---
+attachment:
+  - variable name: EligibilityAnalysis
+    filename: 00Divorce
+    pdf template file: 00Divorce.pdf
+    fields:
+      - "UserTitle": ${user.title}
+      - "UserFirstName": ${user.name.first}
+      - "UserLastName": ${user.name.last}
+      - "AddressForService": ${user.mailing_address}
+      - "UserPhone": ${user.phone}
+      - "UserEmail": ${user.email}
+      - "UserCommPref": ${user.comm_preference}
+      - "UserLanguage": ${user.language}
+      - "UserLanguageContact": ${interpret_code}
+      - "SpouseTitle": ${spouse.title}
+      - "SpouseFirstName": ${spouse.name.first}
+      - "SpouseLastName": ${spouse.name.last}
+      - "SpouseLoc": ${spouse.loc}
+      - "ResidencyRequirement": ${ci_residency}
+      - "UserMarriageCertificate": I was married ${'in Canada' if ci_MarriedInCanada else 'outside of Canada'}, and I ${marriage_code}
+      - "GroundsForDivorce": ${ci_grounds_code}
+      - "CourtProceedings": ${ci_courtfile}
+      - "DomesticViolence": ${ci_dv}
+      - "varNoMatProp": ${'Yes' if not matrimonial_property_debt else 'No'}
+      - "MatProp": ${mat_prop_code}
+      - "MatPropIndAdvice": ${Mat_advice_code}
+      - "SpousalSupport": ${'Yes' if not user.claim_support else 'No'}
+      - "Children": ${'My former spouse and I have children, please see attached documentation [BETA]' if children.there_are_any else 'My former spouse and I do not have children together.'}
+      - "ChildThereIsExcess": ''
+      - "ChildName1": ''
+      - "ChildAge1": ''
+      - "Child1LivesWith": ''
+      - "Child1Lives": ''
+      - "ChildName2": ''
+      - "ChildAge2": ''
+      - "Child2LivesWith": ''
+      - "Child2Lives": ''
+      - "ChildName3": ''
+      - "ChildAge3": ''
+      - "Child3LivesWith": ''
+      - "Child3Lives": ''
+      - "Child4LivesWith": ''
+      - "ChildName4": ''
+      - "ChildAge4": ''
+      - "Child4Lives": ''
+      - "CustodyParenting": ${user.parenting if children.there_are_any else 'N/A'}
+      - "ChildSupport": ${user.CS if children.there_are_any else 'N/A'}
+      - "ChildPASCourse": ${user.PAS if children.there_are_any else 'N/A'}
+      - "UserIncome": ${user.monthly_income}
+      - "UserDependants": ${user.number_of_dependents}
+      - "UserProofOfIncome": ${user.confirm_attach_income_docs}
+      - "UserHouseholdIncome": ${user.household_income_earner_code}
+      
+---
+code: |
+  if not matrimonial_property_debt:
+    mat_prop_code = ''
+  else:
+    if matrimonial_written_agreement:
+      mat_prop_agreement = ' we have a written agreement for property division'
+    else: 
+      mat_prop_agreement = ' we do not have a written agreement for property division'
+    mat_prop_code = 'There is matrimonial debt, and'+mat_prop_agreement
+    
+---
+code: |
+  if not matrimonial_property_debt:
+    Mat_advice_code = ''
+  else:
+    if matrimonial_independent_legal:
+      Mat_advice_code = 'My spouse and I have received independent legal advice.'
+    else:
+      Mat_advice_code = 'My spouse and I have not received indpendent legal advice.' 
+---
+code: |
+  if ci_MarriedInCanada:
+    if ci_HasCertificate:
+      marriage_code = 'have a copy of my Marriage Cerficate or other official document.'
+    else: 
+      marriage_code = 'will order a copy of my official document from a provincial registries office.'
+  else:
+    if ci_HasCertificateNotInCanada:
+      marriage_code = 'have a copy of my official Marriage Certificate.'
+    else:
+      marriage_code = 'will collect the date and location of marriage, name and title of officiator, and names of witnesses to the ceremony prior to attending the DYOD clinic.'
+      
+      
+---
+code: |
+  if ci_grounds == 'separate':
+    ci_grounds_code = 'I am seeking divorce on the grounds that my former spouse and I have or will be living separate and apart for one year and we began living separate and apart on '+ci_separate_date
+  elif ci_grounds == 'adultery':
+    ci_grounds_code = 'I am seeking divorce on the grounds that my former spouse committed adultery, and they are'
+    if ci_adulteryaffidavit:
+      ci_grounds_code = ci_grounds_code+' willing to sign an affidavit attesting to their actions.'
+    else:
+      ci_grounds_code = ci_grounds_code+' not willing to sign an affidavit attesting to their actions.'
+    
+  else:
+    ci_grounds_code = 'I am seeking divorce on the grounds that my former spouse has engaged in acts of mental or physical cruelty such that it is impossible to continue living together.'
+---
+code: |
+  if user.interpretor_contactyesno:
+    interpret_code = user.interpretor_info
+  else:
+    interpret_code = 'N/A'
+
+---
+attachment:
+  - variable name: ChildrenInfo
+    filename: Children_Info
+    content: |
+      ${user.name} has ${len(children)} child(ren) with their former spouse: 
+      
+      %for c in children:
+      
+      * ${c.name}, aged ${c.age}, who lives with ${c.caregiver} in ${c.loc}. ${c.name} is ${'' if c.dependant else 'not'} a dependant. 
+      
+      %endfor
+      
